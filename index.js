@@ -96,14 +96,12 @@ try {
     await io.mkdirP(path.resolve("latest")).catch(() => {});
 
     for (const {workspacePackage, coverageSummary}  of coverages) {
-      core.info(`https://img.shields.io/badge/${workspacePackage.replace("-", "--")}-${coverageSummary.totalCoverage}%25-brightgreen`);
-
       await io.mkdirP(workspacePackage);
       await fs.writeFile(path.resolve("old", latestCommitId, workspacePackage + ".json"), JSON.stringify(coverageSummary, null, 2));
       await fs.writeFile(path.resolve("latest", workspacePackage + ".json"), JSON.stringify(coverageSummary, null, 2));
 
       await downloadImage(
-        `https://img.shields.io/badge/${workspacePackage.replace("-", "--")}-${coverageSummary.totalCoverage}%25-brightgreen`,
+        `https://img.shields.io/badge/${workspacePackage.replaceAll("-", "--")}-${coverageSummary.totalCoverage}%25-brightgreen`,
         path.resolve("latest", workspacePackage + ".badge.svg")
       );
 
