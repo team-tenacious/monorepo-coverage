@@ -8,9 +8,6 @@ inputs:
   GITHUB_TOKEN:
     description: The username of the user that initiated the workflow run. Required when creating the coverage branch
     required: false
-  GITHUB_ACTOR:
-    description: Your github token. Required when creating the coverage branch
-    required: false
   COVERAGE_BRANCH:
     description: Branch to create & store your totle coverage data in
     required: false
