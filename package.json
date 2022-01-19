@@ -1,6 +1,6 @@
 {
   "name": "monorepo-coverage",
-  "version": "1.0.0-a2",
+  "version": "1.0.0-a3",
   "description": "",
   "main": "index.js",
   "type": "module",
