@@ -5,6 +5,12 @@ branding:
   icon: more-horizontal
   color: gray-dark
 inputs:
+  GITHUB_TOKEN:
+    description: Your github token. Required when creating the coverage branch
+    required: false
+  COVERAGE_BRANCH:
+    description: Branch to create & store your totle coverage data in
+    required: false
   ROOT:
     description: When not using autodiscovery, this is the folder which contains all your packages
     required: false
