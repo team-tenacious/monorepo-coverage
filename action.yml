@@ -1,0 +1,22 @@
+name: Monorepo Coverage
+description: Generate coverage badge for each project in a monorepo
+author: Aaron Marais
+branding:
+  icon: more-horizontal
+  color: gray-dark
+inputs:
+  ROOT:
+    description: When not using autodiscovery, this is the folder which contains all your packages
+    required: false
+  PACKAGES:
+    description: When not using autodiscovery, these are the packages to run coverage on
+    required: false
+  BADGE_BRANCH:
+    description: Branch to push coverage badges to
+    required: false
+outputs:
+  COVERAGE:
+    description: Coverage for all packages
+runs:
+  using: 'node16'
+  main: 'index.js'
