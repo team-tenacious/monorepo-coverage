@@ -15,6 +15,7 @@
     "@actions/exec": "^1.1.0",
     "@actions/github": "^5.0.0",
     "@actions/io": "^1.1.1",
+    "axios": "^0.25.0",
     "badges": "^4.27.0",
     "lcov-total": "^1.0.7"
   }

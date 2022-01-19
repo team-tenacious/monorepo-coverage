@@ -4,6 +4,7 @@ import * as io from '@actions/io';
 import fs from "fs/promises";
 import path from 'path';
 import lcovTotal from 'lcov-total';
+import axios from 'axios';
 
 const processCwd = process.env.GITHUB_WORKSPACE ?? process.cwd();
 
@@ -43,8 +44,18 @@ const rootExclusive = async (root) => {
   return coverages;
 }
 
-try {
+async function downloadImage(url, filepath) {
+  const response = await axios({
+      url,
+      method: 'GET',
+      responseType: 'stream'
+  });
 
+  const data = response.data;
+  await fs.writeFile(filepath, data);
+}
+
+try {
   const root = core.getInput('ROOT', { required: true, trimWhitespace: true }) || ".";
   const coverages = await rootExclusive(root);
   
@@ -88,6 +99,11 @@ try {
       await io.mkdirP(workspacePackage);
       await fs.writeFile(path.resolve("old", latestCommitId, workspacePackage + ".json"), JSON.stringify(coverageSummary, null, 2));
       await fs.writeFile(path.resolve("latest", workspacePackage + ".json"), JSON.stringify(coverageSummary, null, 2));
+
+      await downloadImage(
+        `https://img.shields.io/badge/${workspacePackage.replace("-", "--")}-${coverageSummary.totalCoverage}%25-brightgreen`,
+        path.resolve("latest", workspacePackage + ".badge.svg")
+      );
 
       await exec.exec("git add", [path.resolve("old", latestCommitId, workspacePackage + ".json")]);
       await exec.exec("git add", [path.resolve("latest", workspacePackage + ".json")]);
