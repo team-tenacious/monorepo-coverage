@@ -6360,6 +6360,10 @@ try {
       await _actions_exec__WEBPACK_IMPORTED_MODULE_1__.exec("git switch", ["--orphan", coverageBranch]);
     }
 
+    try {
+      await _actions_exec__WEBPACK_IMPORTED_MODULE_1__.exec("git pull", ["origin", coverageBranch]);
+    } catch(e) {}
+
     await _actions_io__WEBPACK_IMPORTED_MODULE_2__.mkdirP(path__WEBPACK_IMPORTED_MODULE_4__.resolve("old", latestCommitId)).catch(() => {});
     await _actions_io__WEBPACK_IMPORTED_MODULE_2__.rmRF(path__WEBPACK_IMPORTED_MODULE_4__.resolve("latest", "*")).catch(() => {});
     await _actions_io__WEBPACK_IMPORTED_MODULE_2__.mkdirP(path__WEBPACK_IMPORTED_MODULE_4__.resolve("latest")).catch(() => {});

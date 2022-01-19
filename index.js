@@ -91,6 +91,10 @@ try {
       await exec.exec("git switch", ["--orphan", coverageBranch]);
     }
 
+    try {
+      await exec.exec("git pull", ["origin", coverageBranch]);
+    } catch(e) {}
+
     await io.mkdirP(path.resolve("old", latestCommitId)).catch(() => {});
     await io.rmRF(path.resolve("latest", "*")).catch(() => {});
     await io.mkdirP(path.resolve("latest")).catch(() => {});
