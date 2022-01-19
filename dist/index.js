@@ -6365,6 +6365,8 @@ try {
     await _actions_io__WEBPACK_IMPORTED_MODULE_2__.mkdirP(path__WEBPACK_IMPORTED_MODULE_4__.resolve("latest")).catch(() => {});
 
     for (const {workspacePackage, coverageSummary}  of coverages) {
+      _actions_core__WEBPACK_IMPORTED_MODULE_0__.info(`https://img.shields.io/badge/${workspacePackage.replace("-", "--")}-${coverageSummary.totalCoverage}%25-brightgreen`);
+
       await _actions_io__WEBPACK_IMPORTED_MODULE_2__.mkdirP(workspacePackage);
       await fs_promises__WEBPACK_IMPORTED_MODULE_3__.writeFile(path__WEBPACK_IMPORTED_MODULE_4__.resolve("old", latestCommitId, workspacePackage + ".json"), JSON.stringify(coverageSummary, null, 2));
       await fs_promises__WEBPACK_IMPORTED_MODULE_3__.writeFile(path__WEBPACK_IMPORTED_MODULE_4__.resolve("latest", workspacePackage + ".json"), JSON.stringify(coverageSummary, null, 2));
