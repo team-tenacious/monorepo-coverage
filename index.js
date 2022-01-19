@@ -5,6 +5,8 @@ import fs from "fs/promises";
 import path from 'path';
 import lcovTotal from 'lcov-total';
 
+const processCwd = process.env.GITHUB_WORKSPACE ?? process.cwd();
+
 const checkForLcovInfo = async (cwd) => {
   try {
     await fs.stat(path.resolve(cwd, "coverage", "lcov.info"));
@@ -20,13 +22,13 @@ const rootExclusive = async (root) => {
   const coverages = [];
 
   for (const workspacePackage of workspacePackages) {
-    await fs.stat(process.cwd(), root, workspacePackage);
-    const packageCwd = path.resolve(process.cwd(), root, workspacePackage);
+    await fs.stat(processCwd, root, workspacePackage);
+    const packageCwd = path.resolve(processCwd, root, workspacePackage);
 
     if (!await checkForLcovInfo(packageCwd)) {
       try {
-        await fs.stat(path.resolve(process.cwd(), root, workspacePackage, ".nyc_output"));
-        await exec.exec('npx nyc report', ["--reporter=lcovonly"], {cwd: path.resolve(process.cwd(), root, workspacePackage)});
+        await fs.stat(path.resolve(processCwd, root, workspacePackage, ".nyc_output"));
+        await exec.exec('npx nyc report', ["--reporter=lcovonly"], {cwd: path.resolve(processCwd, root, workspacePackage)});
       } catch(e) {}
 
       if (!await checkForLcovInfo(packageCwd)) {

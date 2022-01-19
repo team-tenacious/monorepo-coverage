@@ -3211,6 +3211,8 @@ __nccwpck_require__.a(__webpack_module__, async (__webpack_handle_async_dependen
 
 
 
+const processCwd = process.env.GITHUB_WORKSPACE ?? process.cwd();
+
 const checkForLcovInfo = async (cwd) => {
   try {
     await fs_promises__WEBPACK_IMPORTED_MODULE_3__.stat(path__WEBPACK_IMPORTED_MODULE_4__.resolve(cwd, "coverage", "lcov.info"));
@@ -3226,13 +3228,13 @@ const rootExclusive = async (root) => {
   const coverages = [];
 
   for (const workspacePackage of workspacePackages) {
-    await fs_promises__WEBPACK_IMPORTED_MODULE_3__.stat(process.cwd(), root, workspacePackage);
-    const packageCwd = __nccwpck_require__.ab + "monorepo-coverage/" + root + '/' + workspacePackage;
+    await fs_promises__WEBPACK_IMPORTED_MODULE_3__.stat(processCwd, root, workspacePackage);
+    const packageCwd = path__WEBPACK_IMPORTED_MODULE_4__.resolve(processCwd, root, workspacePackage);
 
     if (!await checkForLcovInfo(packageCwd)) {
       try {
-        await fs_promises__WEBPACK_IMPORTED_MODULE_3__.stat(path__WEBPACK_IMPORTED_MODULE_4__.resolve(process.cwd(), root, workspacePackage, ".nyc_output"));
-        await _actions_exec__WEBPACK_IMPORTED_MODULE_1__.exec('npx nyc report', ["--reporter=lcovonly"], {cwd: __nccwpck_require__.ab + "monorepo-coverage/" + root + '/' + workspacePackage});
+        await fs_promises__WEBPACK_IMPORTED_MODULE_3__.stat(path__WEBPACK_IMPORTED_MODULE_4__.resolve(processCwd, root, workspacePackage, ".nyc_output"));
+        await _actions_exec__WEBPACK_IMPORTED_MODULE_1__.exec('npx nyc report', ["--reporter=lcovonly"], {cwd: path__WEBPACK_IMPORTED_MODULE_4__.resolve(processCwd, root, workspacePackage)});
       } catch(e) {}
 
       if (!await checkForLcovInfo(packageCwd)) {
