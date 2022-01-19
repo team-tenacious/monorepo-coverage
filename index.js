@@ -107,6 +107,7 @@ try {
 
       await exec.exec("git add", [path.resolve("old", latestCommitId, workspacePackage + ".json")]);
       await exec.exec("git add", [path.resolve("latest", workspacePackage + ".json")]);
+      await exec.exec("git add", [path.resolve("latest", workspacePackage + ".badge.svg")]);
     }
 
     await exec.exec("git config", ["http.sslVerify", false]);

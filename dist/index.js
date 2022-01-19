@@ -6376,6 +6376,7 @@ try {
 
       await _actions_exec__WEBPACK_IMPORTED_MODULE_1__.exec("git add", [path__WEBPACK_IMPORTED_MODULE_4__.resolve("old", latestCommitId, workspacePackage + ".json")]);
       await _actions_exec__WEBPACK_IMPORTED_MODULE_1__.exec("git add", [path__WEBPACK_IMPORTED_MODULE_4__.resolve("latest", workspacePackage + ".json")]);
+      await _actions_exec__WEBPACK_IMPORTED_MODULE_1__.exec("git add", [path__WEBPACK_IMPORTED_MODULE_4__.resolve("latest", workspacePackage + ".badge.svg")]);
     }
 
     await _actions_exec__WEBPACK_IMPORTED_MODULE_1__.exec("git config", ["http.sslVerify", false]);
