@@ -6287,7 +6287,9 @@ const checkForLcovInfo = async (cwd) => {
 }
 
 const rootExclusive = async (root) => {
-  const workspacePackages = _actions_core__WEBPACK_IMPORTED_MODULE_0__.getInput('PACKAGES', { required: true, trimWhitespace: true })?.split(/(?<!(?:$|[^\\])(?:\\\\)*?\\),/).map(item => item.replace("\\,", ","));
+  const workspacePackages = _actions_core__WEBPACK_IMPORTED_MODULE_0__.getInput(
+    'PACKAGES', { required: true, trimWhitespace: true }
+  )?.split(/(?<!(?:$|[^\\])(?:\\\\)*?\\),/).map(item => item.replace("\\,", ","));
 
   const coverages = [];
 
@@ -6364,23 +6366,25 @@ try {
       await _actions_exec__WEBPACK_IMPORTED_MODULE_1__.exec("git pull", ["origin", coverageBranch]);
     } catch(e) {}
 
-    await _actions_io__WEBPACK_IMPORTED_MODULE_2__.mkdirP(path__WEBPACK_IMPORTED_MODULE_4__.resolve("old", latestCommitId)).catch(() => {});
-    await _actions_io__WEBPACK_IMPORTED_MODULE_2__.rmRF(path__WEBPACK_IMPORTED_MODULE_4__.resolve("latest", "*")).catch(() => {});
-    await _actions_io__WEBPACK_IMPORTED_MODULE_2__.mkdirP(path__WEBPACK_IMPORTED_MODULE_4__.resolve("latest")).catch(() => {});
+    await _actions_io__WEBPACK_IMPORTED_MODULE_2__.mkdirP(path__WEBPACK_IMPORTED_MODULE_4__.resolve(originalBranch, "old", latestCommitId)).catch(() => {});
+    await _actions_io__WEBPACK_IMPORTED_MODULE_2__.rmRF(path__WEBPACK_IMPORTED_MODULE_4__.resolve(originalBranch, "latest", "*")).catch(() => {});
+    await _actions_io__WEBPACK_IMPORTED_MODULE_2__.mkdirP(path__WEBPACK_IMPORTED_MODULE_4__.resolve(originalBranch, "latest")).catch(() => {});
 
     for (const {workspacePackage, coverageSummary}  of coverages) {
-      await _actions_io__WEBPACK_IMPORTED_MODULE_2__.mkdirP(workspacePackage);
-      await fs_promises__WEBPACK_IMPORTED_MODULE_3__.writeFile(path__WEBPACK_IMPORTED_MODULE_4__.resolve("old", latestCommitId, workspacePackage + ".json"), JSON.stringify(coverageSummary, null, 2));
-      await fs_promises__WEBPACK_IMPORTED_MODULE_3__.writeFile(path__WEBPACK_IMPORTED_MODULE_4__.resolve("latest", workspacePackage + ".json"), JSON.stringify(coverageSummary, null, 2));
+      await fs_promises__WEBPACK_IMPORTED_MODULE_3__.writeFile(path__WEBPACK_IMPORTED_MODULE_4__.resolve(originalBranch, "old", latestCommitId, workspacePackage + ".json"), JSON.stringify(coverageSummary, null, 2));
+      await fs_promises__WEBPACK_IMPORTED_MODULE_3__.writeFile(path__WEBPACK_IMPORTED_MODULE_4__.resolve(originalBranch, "latest", workspacePackage + ".json"), JSON.stringify(coverageSummary, null, 2));
 
       await downloadImage(
         `https://img.shields.io/badge/${workspacePackage.replaceAll("-", "--")}-${coverageSummary.totalCoverage}%25-brightgreen`,
-        path__WEBPACK_IMPORTED_MODULE_4__.resolve("latest", workspacePackage + ".badge.svg")
+        path__WEBPACK_IMPORTED_MODULE_4__.resolve(originalBranch, "latest", workspacePackage + ".badge.svg")
       );
 
-      await _actions_exec__WEBPACK_IMPORTED_MODULE_1__.exec("git add", [path__WEBPACK_IMPORTED_MODULE_4__.resolve("old", latestCommitId, workspacePackage + ".json")]);
-      await _actions_exec__WEBPACK_IMPORTED_MODULE_1__.exec("git add", [path__WEBPACK_IMPORTED_MODULE_4__.resolve("latest", workspacePackage + ".json")]);
-      await _actions_exec__WEBPACK_IMPORTED_MODULE_1__.exec("git add", [path__WEBPACK_IMPORTED_MODULE_4__.resolve("latest", workspacePackage + ".badge.svg")]);
+      await _actions_exec__WEBPACK_IMPORTED_MODULE_1__.exec("cp", [path__WEBPACK_IMPORTED_MODULE_4__.resolve(originalBranch, "latest", workspacePackage + ".badge.svg"), path__WEBPACK_IMPORTED_MODULE_4__.resolve(originalBranch, "old", latestCommitId, workspacePackage + ".badge.svg")])
+
+      await _actions_exec__WEBPACK_IMPORTED_MODULE_1__.exec("git add", [path__WEBPACK_IMPORTED_MODULE_4__.resolve(originalBranch, "old", latestCommitId, workspacePackage + ".json")]);
+      await _actions_exec__WEBPACK_IMPORTED_MODULE_1__.exec("git add", [path__WEBPACK_IMPORTED_MODULE_4__.resolve(originalBranch, "old", latestCommitId, workspacePackage + ".badge.svg")]);
+      await _actions_exec__WEBPACK_IMPORTED_MODULE_1__.exec("git add", [path__WEBPACK_IMPORTED_MODULE_4__.resolve(originalBranch, "latest", workspacePackage + ".json")]);
+      await _actions_exec__WEBPACK_IMPORTED_MODULE_1__.exec("git add", [path__WEBPACK_IMPORTED_MODULE_4__.resolve(originalBranch, "latest", workspacePackage + ".badge.svg")]);
     }
 
     await _actions_exec__WEBPACK_IMPORTED_MODULE_1__.exec("git config", ["http.sslVerify", false]);

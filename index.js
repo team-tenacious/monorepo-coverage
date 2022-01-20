@@ -18,7 +18,9 @@ const checkForLcovInfo = async (cwd) => {
 }
 
 const rootExclusive = async (root) => {
-  const workspacePackages = core.getInput('PACKAGES', { required: true, trimWhitespace: true })?.split(/(?<!(?:$|[^\\])(?:\\\\)*?\\),/).map(item => item.replace("\\,", ","));
+  const workspacePackages = core.getInput(
+    'PACKAGES', { required: true, trimWhitespace: true }
+  )?.split(/(?<!(?:$|[^\\])(?:\\\\)*?\\),/).map(item => item.replace("\\,", ","));
 
   const coverages = [];
 
@@ -95,23 +97,25 @@ try {
       await exec.exec("git pull", ["origin", coverageBranch]);
     } catch(e) {}
 
-    await io.mkdirP(path.resolve("old", latestCommitId)).catch(() => {});
-    await io.rmRF(path.resolve("latest", "*")).catch(() => {});
-    await io.mkdirP(path.resolve("latest")).catch(() => {});
+    await io.mkdirP(path.resolve(originalBranch, "old", latestCommitId)).catch(() => {});
+    await io.rmRF(path.resolve(originalBranch, "latest", "*")).catch(() => {});
+    await io.mkdirP(path.resolve(originalBranch, "latest")).catch(() => {});
 
     for (const {workspacePackage, coverageSummary}  of coverages) {
-      await io.mkdirP(workspacePackage);
-      await fs.writeFile(path.resolve("old", latestCommitId, workspacePackage + ".json"), JSON.stringify(coverageSummary, null, 2));
-      await fs.writeFile(path.resolve("latest", workspacePackage + ".json"), JSON.stringify(coverageSummary, null, 2));
+      await fs.writeFile(path.resolve(originalBranch, "old", latestCommitId, workspacePackage + ".json"), JSON.stringify(coverageSummary, null, 2));
+      await fs.writeFile(path.resolve(originalBranch, "latest", workspacePackage + ".json"), JSON.stringify(coverageSummary, null, 2));
 
       await downloadImage(
         `https://img.shields.io/badge/${workspacePackage.replaceAll("-", "--")}-${coverageSummary.totalCoverage}%25-brightgreen`,
-        path.resolve("latest", workspacePackage + ".badge.svg")
+        path.resolve(originalBranch, "latest", workspacePackage + ".badge.svg")
       );
 
-      await exec.exec("git add", [path.resolve("old", latestCommitId, workspacePackage + ".json")]);
-      await exec.exec("git add", [path.resolve("latest", workspacePackage + ".json")]);
-      await exec.exec("git add", [path.resolve("latest", workspacePackage + ".badge.svg")]);
+      await exec.exec("cp", [path.resolve(originalBranch, "latest", workspacePackage + ".badge.svg"), path.resolve(originalBranch, "old", latestCommitId, workspacePackage + ".badge.svg")])
+
+      await exec.exec("git add", [path.resolve(originalBranch, "old", latestCommitId, workspacePackage + ".json")]);
+      await exec.exec("git add", [path.resolve(originalBranch, "old", latestCommitId, workspacePackage + ".badge.svg")]);
+      await exec.exec("git add", [path.resolve(originalBranch, "latest", workspacePackage + ".json")]);
+      await exec.exec("git add", [path.resolve(originalBranch, "latest", workspacePackage + ".badge.svg")]);
     }
 
     await exec.exec("git config", ["http.sslVerify", false]);
