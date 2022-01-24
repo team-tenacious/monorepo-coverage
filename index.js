@@ -60,7 +60,7 @@ async function downloadImage(url, filepath) {
 try {
   const root = core.getInput('ROOT', { required: true, trimWhitespace: true }) || ".";
   const coverages = await rootExclusive(root);
-  
+
   const coverageBranch = core.getInput("COVERAGE_BRANCH", { required: false, trimWhitespace: true });
   if (coverageBranch !== "") {
     const token = core.getInput("GITHUB_TOKEN", { required: true, trimWhitespace: true });
@@ -86,6 +86,10 @@ try {
         },
       }
     });
+
+    try {
+      await exec.exec("git stash");
+    } catch(e) {}
 
     try {
       await exec.exec("git switch", [coverageBranch]);
@@ -127,6 +131,10 @@ try {
     await exec.exec("git push", [`https://${process.env.GITHUB_ACTOR}:${token}@github.com/${process.env.GITHUB_REPOSITORY}.git`]);
 
     await exec.exec("git switch", [originalBranch]);
+
+    try {
+      await exec.exec("git stash pop");
+    } catch(e) {}
   }
 
   core.setOutput("COVERAGE", JSON.stringify(coverages));

@@ -6329,7 +6329,7 @@ async function downloadImage(url, filepath) {
 try {
   const root = _actions_core__WEBPACK_IMPORTED_MODULE_0__.getInput('ROOT', { required: true, trimWhitespace: true }) || ".";
   const coverages = await rootExclusive(root);
-  
+
   const coverageBranch = _actions_core__WEBPACK_IMPORTED_MODULE_0__.getInput("COVERAGE_BRANCH", { required: false, trimWhitespace: true });
   if (coverageBranch !== "") {
     const token = _actions_core__WEBPACK_IMPORTED_MODULE_0__.getInput("GITHUB_TOKEN", { required: true, trimWhitespace: true });
@@ -6355,6 +6355,10 @@ try {
         },
       }
     });
+
+    try {
+      await _actions_exec__WEBPACK_IMPORTED_MODULE_1__.exec("git stash");
+    } catch(e) {}
 
     try {
       await _actions_exec__WEBPACK_IMPORTED_MODULE_1__.exec("git switch", [coverageBranch]);
@@ -6396,6 +6400,10 @@ try {
     await _actions_exec__WEBPACK_IMPORTED_MODULE_1__.exec("git push", [`https://${process.env.GITHUB_ACTOR}:${token}@github.com/${process.env.GITHUB_REPOSITORY}.git`]);
 
     await _actions_exec__WEBPACK_IMPORTED_MODULE_1__.exec("git switch", [originalBranch]);
+
+    try {
+      await _actions_exec__WEBPACK_IMPORTED_MODULE_1__.exec("git stash pop");
+    } catch(e) {}
   }
 
   _actions_core__WEBPACK_IMPORTED_MODULE_0__.setOutput("COVERAGE", JSON.stringify(coverages));
