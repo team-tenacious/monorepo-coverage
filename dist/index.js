@@ -6326,90 +6326,83 @@ async function downloadImage(url, filepath) {
   await fs_promises__WEBPACK_IMPORTED_MODULE_3__.writeFile(filepath, data);
 }
 
-try {
-  const root = _actions_core__WEBPACK_IMPORTED_MODULE_0__.getInput('ROOT', { required: true, trimWhitespace: true }) || ".";
-  const coverages = await rootExclusive(root);
+const runAction = async () => {
+  try {
+    const root = _actions_core__WEBPACK_IMPORTED_MODULE_0__.getInput('ROOT', { required: true, trimWhitespace: true }) || ".";
+    const coverages = await rootExclusive(root);
 
-  const coverageBranch = _actions_core__WEBPACK_IMPORTED_MODULE_0__.getInput("COVERAGE_BRANCH", { required: false, trimWhitespace: true });
-  if (coverageBranch !== "") {
-    const token = _actions_core__WEBPACK_IMPORTED_MODULE_0__.getInput("GITHUB_TOKEN", { required: true, trimWhitespace: true });
+    const coverageBranch = _actions_core__WEBPACK_IMPORTED_MODULE_0__.getInput("COVERAGE_BRANCH", { required: false, trimWhitespace: true });
+    if (coverageBranch !== "") {
+      const token = _actions_core__WEBPACK_IMPORTED_MODULE_0__.getInput("GITHUB_TOKEN", { required: true, trimWhitespace: true });
 
-    let originalBranch;
-    let latestCommitId;
+      const originalBranch = process.env.GITHUB_REF_NAME;
+      const latestCommitId = process.env.GITHUB_SHA;
 
-    await _actions_exec__WEBPACK_IMPORTED_MODULE_1__.exec("git branch", [], {
-      listeners: {
-        stdout: data => {
-          let branches = data.toString();
-          branches = branches.slice(branches.indexOf("* ") + 2);
-          branches = branches.slice(0, branches.indexOf("\n"));
-          originalBranch = branches;
-        },
+      const oldPath = path__WEBPACK_IMPORTED_MODULE_4__.resolve(originalBranch, "old", latestCommitId);
+      const latestPath = path__WEBPACK_IMPORTED_MODULE_4__.resolve(originalBranch, "lastest");
+
+      const getJson = (filePath, packageName) => path__WEBPACK_IMPORTED_MODULE_4__.resolve(filePath, packageName + ".total.json");
+      const getBadge = (filePath, packageName) => path__WEBPACK_IMPORTED_MODULE_4__.resolve(filePath, packageName + ".badge.svg");
+
+      try {
+        await _actions_exec__WEBPACK_IMPORTED_MODULE_1__.exec("git stash");
+      } catch(e) {}
+
+      try {
+        await _actions_exec__WEBPACK_IMPORTED_MODULE_1__.exec("git switch", [coverageBranch]);
+      } catch(e) {
+        await _actions_exec__WEBPACK_IMPORTED_MODULE_1__.exec("git switch", ["--orphan", coverageBranch]);
       }
-    });
 
-    await _actions_exec__WEBPACK_IMPORTED_MODULE_1__.exec("git rev-parse HEAD", [], {
-      listeners: {
-        stdout: data => {
-          latestCommitId = data.toString().trim();
-        },
+      try {
+        await _actions_exec__WEBPACK_IMPORTED_MODULE_1__.exec("git pull", ["origin", coverageBranch]);
+      } catch(e) {}
+
+      await _actions_io__WEBPACK_IMPORTED_MODULE_2__.mkdirP(oldPath).catch(() => {});
+      await _actions_io__WEBPACK_IMPORTED_MODULE_2__.rmRF(__nccwpck_require__.ab + "monorepo-coverage/" + latestPath + '/*').catch(() => {});
+      await _actions_io__WEBPACK_IMPORTED_MODULE_2__.mkdirP(latestPath).catch(() => {});
+
+      for (const {workspacePackage, coverageSummary}  of coverages) {
+        await fs_promises__WEBPACK_IMPORTED_MODULE_3__.writeFile(getJson(oldPath, workspacePackage), JSON.stringify(coverageSummary, null, 2));
+        await fs_promises__WEBPACK_IMPORTED_MODULE_3__.writeFile(getJson(latestPath, workspacePackage), JSON.stringify(coverageSummary, null, 2));
+
+        await downloadImage(
+          `https://img.shields.io/badge/${workspacePackage.replaceAll("-", "--")}-${coverageSummary.totalCoverage}%25-brightgreen`,
+          getBadge(latestPath, workspacePackage)
+        );
+
+        await _actions_exec__WEBPACK_IMPORTED_MODULE_1__.exec("cp", [getBadge(latestPath, workspacePackage), getBadge(oldPath, workspacePackage)]);
+
+        await _actions_exec__WEBPACK_IMPORTED_MODULE_1__.exec("git add", [getJson(oldPath, workspacePackage)]);
+        await _actions_exec__WEBPACK_IMPORTED_MODULE_1__.exec("git add", [getBadge(oldPath, workspacePackage)]);
+        await _actions_exec__WEBPACK_IMPORTED_MODULE_1__.exec("git add", [getJson(latestPath, workspacePackage)]);
+        await _actions_exec__WEBPACK_IMPORTED_MODULE_1__.exec("git add", [getBadge(latestPath, workspacePackage)]);
       }
-    });
 
-    try {
-      await _actions_exec__WEBPACK_IMPORTED_MODULE_1__.exec("git stash");
-    } catch(e) {}
+      await _actions_exec__WEBPACK_IMPORTED_MODULE_1__.exec("git config", ["http.sslVerify", false]);
+      await _actions_exec__WEBPACK_IMPORTED_MODULE_1__.exec("git config", ["--local", "user.email", "github-actions[bot]@users.noreply.github.com"]);
+      await _actions_exec__WEBPACK_IMPORTED_MODULE_1__.exec("git config", ["--local", "user.name", "github-actions[bot]"]);
 
-    try {
-      await _actions_exec__WEBPACK_IMPORTED_MODULE_1__.exec("git switch", [coverageBranch]);
-    } catch(e) {
-      await _actions_exec__WEBPACK_IMPORTED_MODULE_1__.exec("git switch", ["--orphan", coverageBranch]);
+      await _actions_exec__WEBPACK_IMPORTED_MODULE_1__.exec("git commit", ["-m", "autogenerated coverage"]);
+
+      await _actions_exec__WEBPACK_IMPORTED_MODULE_1__.exec("git push", [`https://${process.env.GITHUB_ACTOR}:${token}@github.com/${process.env.GITHUB_REPOSITORY}.git`]);
+
+      await _actions_exec__WEBPACK_IMPORTED_MODULE_1__.exec("git switch", [originalBranch]);
+
+      try {
+        await _actions_exec__WEBPACK_IMPORTED_MODULE_1__.exec("git stash pop");
+      } catch(e) {}
     }
 
-    try {
-      await _actions_exec__WEBPACK_IMPORTED_MODULE_1__.exec("git pull", ["origin", coverageBranch]);
-    } catch(e) {}
-
-    await _actions_io__WEBPACK_IMPORTED_MODULE_2__.mkdirP(path__WEBPACK_IMPORTED_MODULE_4__.resolve(originalBranch, "old", latestCommitId)).catch(() => {});
-    await _actions_io__WEBPACK_IMPORTED_MODULE_2__.rmRF(path__WEBPACK_IMPORTED_MODULE_4__.resolve(originalBranch, "latest", "*")).catch(() => {});
-    await _actions_io__WEBPACK_IMPORTED_MODULE_2__.mkdirP(path__WEBPACK_IMPORTED_MODULE_4__.resolve(originalBranch, "latest")).catch(() => {});
-
-    for (const {workspacePackage, coverageSummary}  of coverages) {
-      await fs_promises__WEBPACK_IMPORTED_MODULE_3__.writeFile(path__WEBPACK_IMPORTED_MODULE_4__.resolve(originalBranch, "old", latestCommitId, workspacePackage + ".json"), JSON.stringify(coverageSummary, null, 2));
-      await fs_promises__WEBPACK_IMPORTED_MODULE_3__.writeFile(path__WEBPACK_IMPORTED_MODULE_4__.resolve(originalBranch, "latest", workspacePackage + ".json"), JSON.stringify(coverageSummary, null, 2));
-
-      await downloadImage(
-        `https://img.shields.io/badge/${workspacePackage.replaceAll("-", "--")}-${coverageSummary.totalCoverage}%25-brightgreen`,
-        path__WEBPACK_IMPORTED_MODULE_4__.resolve(originalBranch, "latest", workspacePackage + ".badge.svg")
-      );
-
-      await _actions_exec__WEBPACK_IMPORTED_MODULE_1__.exec("cp", [path__WEBPACK_IMPORTED_MODULE_4__.resolve(originalBranch, "latest", workspacePackage + ".badge.svg"), path__WEBPACK_IMPORTED_MODULE_4__.resolve(originalBranch, "old", latestCommitId, workspacePackage + ".badge.svg")])
-
-      await _actions_exec__WEBPACK_IMPORTED_MODULE_1__.exec("git add", [path__WEBPACK_IMPORTED_MODULE_4__.resolve(originalBranch, "old", latestCommitId, workspacePackage + ".json")]);
-      await _actions_exec__WEBPACK_IMPORTED_MODULE_1__.exec("git add", [path__WEBPACK_IMPORTED_MODULE_4__.resolve(originalBranch, "old", latestCommitId, workspacePackage + ".badge.svg")]);
-      await _actions_exec__WEBPACK_IMPORTED_MODULE_1__.exec("git add", [path__WEBPACK_IMPORTED_MODULE_4__.resolve(originalBranch, "latest", workspacePackage + ".json")]);
-      await _actions_exec__WEBPACK_IMPORTED_MODULE_1__.exec("git add", [path__WEBPACK_IMPORTED_MODULE_4__.resolve(originalBranch, "latest", workspacePackage + ".badge.svg")]);
-    }
-
-    await _actions_exec__WEBPACK_IMPORTED_MODULE_1__.exec("git config", ["http.sslVerify", false]);
-    await _actions_exec__WEBPACK_IMPORTED_MODULE_1__.exec("git config", ["--local", "user.email", "github-actions[bot]@users.noreply.github.com"]);
-    await _actions_exec__WEBPACK_IMPORTED_MODULE_1__.exec("git config", ["--local", "user.name", "github-actions[bot]"]);
-
-    await _actions_exec__WEBPACK_IMPORTED_MODULE_1__.exec("git commit", ["-m", "autogenerated coverage"]);
-
-    await _actions_exec__WEBPACK_IMPORTED_MODULE_1__.exec("git push", [`https://${process.env.GITHUB_ACTOR}:${token}@github.com/${process.env.GITHUB_REPOSITORY}.git`]);
-
-    await _actions_exec__WEBPACK_IMPORTED_MODULE_1__.exec("git switch", [originalBranch]);
-
-    try {
-      await _actions_exec__WEBPACK_IMPORTED_MODULE_1__.exec("git stash pop");
-    } catch(e) {}
+    _actions_core__WEBPACK_IMPORTED_MODULE_0__.setOutput("COVERAGE", JSON.stringify(coverages));
+  } catch (error) {
+    console.log(error.stack);
+    _actions_core__WEBPACK_IMPORTED_MODULE_0__.setFailed(error.message);
   }
+}
 
-  _actions_core__WEBPACK_IMPORTED_MODULE_0__.setOutput("COVERAGE", JSON.stringify(coverages));
-} catch (error) {
-  console.log(error.stack);
-  _actions_core__WEBPACK_IMPORTED_MODULE_0__.setFailed(error.message);
+if (process.env.GITHUB_REF_TYPE !== "pull_request") {
+  await runAction();
 }
 
 __webpack_handle_async_dependencies__();
