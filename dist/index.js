@@ -6401,7 +6401,7 @@ const runAction = async () => {
   }
 }
 
-if (process.env.GITHUB_REF_TYPE !== "pull_request") {
+if (!process.env.GITHUB_REF.startsWith("refs/pull")) {
   await runAction();
 }
 
