@@ -6339,7 +6339,7 @@ const runAction = async () => {
       const latestCommitId = process.env.GITHUB_SHA;
 
       const oldPath = path__WEBPACK_IMPORTED_MODULE_4__.resolve(originalBranch, "old", latestCommitId);
-      const latestPath = path__WEBPACK_IMPORTED_MODULE_4__.resolve(originalBranch, "lastest");
+      const latestPath = path__WEBPACK_IMPORTED_MODULE_4__.resolve(originalBranch, "latest");
 
       const getJson = (filePath, packageName) => path__WEBPACK_IMPORTED_MODULE_4__.resolve(filePath, packageName + ".total.json");
       const getBadge = (filePath, packageName) => path__WEBPACK_IMPORTED_MODULE_4__.resolve(filePath, packageName + ".badge.svg");

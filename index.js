@@ -70,7 +70,7 @@ const runAction = async () => {
       const latestCommitId = process.env.GITHUB_SHA;
 
       const oldPath = path.resolve(originalBranch, "old", latestCommitId);
-      const latestPath = path.resolve(originalBranch, "lastest");
+      const latestPath = path.resolve(originalBranch, "latest");
 
       const getJson = (filePath, packageName) => path.resolve(filePath, packageName + ".total.json");
       const getBadge = (filePath, packageName) => path.resolve(filePath, packageName + ".badge.svg");
