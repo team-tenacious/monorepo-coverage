@@ -6,8 +6,9 @@
   "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
+    "template:cover": "c8 --all --reporter=lcov --reporter=text npm run",
     "test:unit": "mocha --recursive test/unit",
-    "test:unit:cover": "c8 --reporter=lcov --reporter=text npm run test:unit"
+    "test:unit:cover": "npm run template:cover -- test:unit"
   },
   "keywords": [],
   "author": "",
