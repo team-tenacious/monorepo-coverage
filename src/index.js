@@ -3,47 +3,16 @@ import * as exec from '@actions/exec';
 import * as io from '@actions/io';
 import fs from "fs/promises";
 import path from 'path';
-import lcovTotal from 'lcov-total';
 import axios from 'axios';
 
-const processCwd = process.env.GITHUB_WORKSPACE ?? process.cwd();
-
-const checkForLcovInfo = async (cwd) => {
-  try {
-    await fs.stat(path.resolve(cwd, "coverage", "lcov.info"));
-    return true;
-  } catch(e) {
-    return false;
-  }
-}
+import RunnerFactory from './factories/runner-factory.js';
 
 const rootExclusive = async (root) => {
   const workspacePackages = core.getInput(
     'PACKAGES', { required: true, trimWhitespace: true }
   )?.split(/(?<!(?:$|[^\\])(?:\\\\)*?\\),/).map(item => item.replace("\\,", ","));
 
-  const coverages = [];
-
-  for (const workspacePackage of workspacePackages) {
-    await fs.stat(processCwd, root, workspacePackage);
-    const packageCwd = path.resolve(processCwd, root, workspacePackage);
-
-    if (!await checkForLcovInfo(packageCwd)) {
-      try {
-        await fs.stat(path.resolve(processCwd, root, workspacePackage, ".nyc_output"));
-        await exec.exec('npx nyc report', ["--reporter=lcovonly"], {cwd: path.resolve(processCwd, root, workspacePackage)});
-      } catch(e) {}
-
-      if (!await checkForLcovInfo(packageCwd)) {
-        throw new Error("lcov.info not found");
-      }
-    }
-
-    const totalCoverage = lcovTotal(path.resolve(packageCwd, "coverage", "lcov.info"), {type: "lcov"});
-    coverages.push({ workspacePackage, coverageSummary: { totalCoverage } });
-  }
-
-  return coverages;
+  return await RunnerFactory.getRootRunner(root, workspacePackages).getPackagesCoverage();
 }
 
 async function downloadImage(url, filepath) {
@@ -72,9 +41,6 @@ const runAction = async () => {
       const oldPath = path.resolve(originalBranch, "old", latestCommitId);
       const latestPath = path.resolve(originalBranch, "latest");
 
-      const getJson = (filePath, packageName) => path.resolve(filePath, packageName + ".total.json");
-      const getBadge = (filePath, packageName) => path.resolve(filePath, packageName + ".badge.svg");
-
       try {
         await exec.exec("git stash");
       } catch(e) {}
@@ -93,21 +59,21 @@ const runAction = async () => {
       await io.rmRF(path.resolve(latestPath, "*")).catch(() => {});
       await io.mkdirP(latestPath).catch(() => {});
 
-      for (const {workspacePackage, coverageSummary}  of coverages) {
-        await fs.writeFile(getJson(oldPath, workspacePackage), JSON.stringify(coverageSummary, null, 2));
-        await fs.writeFile(getJson(latestPath, workspacePackage), JSON.stringify(coverageSummary, null, 2));
+      for (const packageCoverage  of coverages) {
+        await fs.writeFile(packageCoverage.json(oldPath), JSON.stringify(packageCoverage.coverage, null, 2));
+        await fs.writeFile(packageCoverage.json(latestPath), JSON.stringify(packageCoverage.coverage, null, 2));
 
         await downloadImage(
-          `https://img.shields.io/badge/${workspacePackage.replaceAll("-", "--")}-${coverageSummary.totalCoverage}%25-brightgreen`,
-          getBadge(latestPath, workspacePackage)
+          `https://img.shields.io/badge/${packageCoverage.name.replaceAll("-", "--")}-${packageCoverage.coverage.totalCoverage}%25-brightgreen`,
+          packageCoverage.badge(latestPath)
         );
 
-        await exec.exec("cp", [getBadge(latestPath, workspacePackage), getBadge(oldPath, workspacePackage)]);
+        await exec.exec("cp", [packageCoverage.badge(latestPath), packageCoverage.badge(oldPath)]);
 
-        await exec.exec("git add", [getJson(oldPath, workspacePackage)]);
-        await exec.exec("git add", [getBadge(oldPath, workspacePackage)]);
-        await exec.exec("git add", [getJson(latestPath, workspacePackage)]);
-        await exec.exec("git add", [getBadge(latestPath, workspacePackage)]);
+        await exec.exec("git add", [packageCoverage.json(oldPath)]);
+        await exec.exec("git add", [packageCoverage.badge(oldPath)]);
+        await exec.exec("git add", [packageCoverage.json(latestPath)]);
+        await exec.exec("git add", [packageCoverage.badge(latestPath)]);
       }
 
       await exec.exec("git config", ["http.sslVerify", false]);

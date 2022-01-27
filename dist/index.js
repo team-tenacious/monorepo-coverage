@@ -6256,7 +6256,179 @@ module.exports = __WEBPACK_EXTERNAL_createRequire(import.meta.url)("zlib");
 
 /***/ }),
 
-/***/ 2126:
+/***/ 3876:
+/***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __nccwpck_require__) => {
+
+
+// EXPORTS
+__nccwpck_require__.d(__webpack_exports__, {
+  "Z": () => (/* binding */ runner_factory)
+});
+
+;// CONCATENATED MODULE: ./src/structures/package-structure.js
+class PackageStructure {
+  #packageName;
+  #coverage;
+
+  constructor(packageName, coverage) {
+    this.#packageName = packageName;
+    this.#coverage = coverage;
+  }
+
+  badge(folderPath) {
+    return path.resolve(folderPath, `${this.#packageName}.badge.svg`);
+  }
+
+  json(folderPath) {
+    return path.resolve(folderPath, `${this.#packageName}.total.json`);
+  }
+
+  get name() {
+    return this.#packageName;
+  }
+
+  get coverage() {
+    return { totalCoverage: this.#coverage };
+  }
+}
+
+/* harmony default export */ const package_structure = (PackageStructure);
+
+;// CONCATENATED MODULE: ./src/factories/structure-factory.js
+
+
+class StructureFactory {
+  static getPackageStructure(packageName, coveragePercentage) {
+    return new package_structure(packageName, coveragePercentage);
+  }
+}
+
+/* harmony default export */ const structure_factory = (StructureFactory);
+
+;// CONCATENATED MODULE: external "node:fs"
+const external_node_fs_namespaceObject = __WEBPACK_EXTERNAL_createRequire(import.meta.url)("node:fs");
+;// CONCATENATED MODULE: external "node:fs/promises"
+const promises_namespaceObject = __WEBPACK_EXTERNAL_createRequire(import.meta.url)("node:fs/promises");
+;// CONCATENATED MODULE: external "node:path"
+const external_node_path_namespaceObject = __WEBPACK_EXTERNAL_createRequire(import.meta.url)("node:path");
+// EXTERNAL MODULE: ./node_modules/lcov-total/src/index.js
+var src = __nccwpck_require__(4559);
+;// CONCATENATED MODULE: ./src/util/lcov-util.js
+
+
+
+
+
+const processCwd = process.env.GITHUB_WORKSPACE ?? process.cwd();
+
+class LcovUtil {
+  #packageName;
+  #root;
+
+  constructor(packageName, root) {
+    this.#packageName = packageName;
+    this.#root = root;
+    (0,external_node_fs_namespaceObject.statSync)(this.#path);
+  }
+
+  async exists() {
+    try {
+      await promises_namespaceObject.stat(external_node_path_namespaceObject.resolve(this.#path, "coverage", "lcov.info"));
+      return true;
+    } catch(e) {
+      return false;
+    }
+  }
+
+  async generate() {
+    try {
+      await promises_namespaceObject.stat(external_node_path_namespaceObject.resolve(this.#path, ".nyc_output"));
+      await exec.exec('npx nyc report', ["--reporter=lcovonly"], {cwd: this.#path});
+    } catch(e) {};
+  }
+
+  read() {
+    const totalCoverage = src(external_node_path_namespaceObject.resolve(this.#path, "coverage", "lcov.info"), {type: "lcov"});
+    return totalCoverage;
+  }
+
+  get #path() {
+    const packageCwd = external_node_path_namespaceObject.resolve(processCwd, this.#root, this.#packageName);
+    return packageCwd;
+
+  }
+}
+
+/* harmony default export */ const lcov_util = (LcovUtil);
+
+;// CONCATENATED MODULE: ./src/factories/util-factory.js
+
+
+class UtilFactory {
+  static getLcovUtil(packageName, root) {
+    return new lcov_util(packageName, root);
+  }
+}
+
+/* harmony default export */ const util_factory = (UtilFactory);
+
+;// CONCATENATED MODULE: ./src/runners/root-runner.js
+
+
+
+class RootRunner {
+  #root;
+  #wspackages;
+
+  constructor(root, wspackages) {
+    this.#root = root;
+    this.#wspackages = wspackages;
+  }
+
+  async getPackagesCoverage() {
+    const packageCoverage = [];
+
+    for (const wspackageName of this.#wspackages) {
+      const totalCoverage = await this.#getTotalCoverage(wspackageName);
+      const wspackage = structure_factory.getPackageStructure(wspackageName, totalCoverage);
+      packageCoverage.push(wspackage);
+    }
+
+    return packageCoverage;
+  }
+
+  async #getTotalCoverage(wspackageName) {
+    const lcov = util_factory.getLcovUtil(wspackageName, this.#root);
+
+    if (!await lcov.exists()) {
+      await lcov.generate();
+
+      if (!await lcov.exists()) {
+        throw new Error("lcov.info not found");
+      }
+    }
+
+    return lcov.read();
+  }
+}
+
+/* harmony default export */ const root_runner = (RootRunner);
+
+;// CONCATENATED MODULE: ./src/factories/runner-factory.js
+
+
+class RunnerFactory {
+  static getRootRunner(root, packages) {
+    return new root_runner(root, packages);
+  }
+}
+
+/* harmony default export */ const runner_factory = (RunnerFactory);
+
+
+/***/ }),
+
+/***/ 3071:
 /***/ ((__webpack_module__, __unused_webpack___webpack_exports__, __nccwpck_require__) => {
 
 __nccwpck_require__.a(__webpack_module__, async (__webpack_handle_async_dependencies__) => {
@@ -6265,8 +6437,8 @@ __nccwpck_require__.a(__webpack_module__, async (__webpack_handle_async_dependen
 /* harmony import */ var _actions_io__WEBPACK_IMPORTED_MODULE_2__ = __nccwpck_require__(5971);
 /* harmony import */ var fs_promises__WEBPACK_IMPORTED_MODULE_3__ = __nccwpck_require__(3292);
 /* harmony import */ var path__WEBPACK_IMPORTED_MODULE_4__ = __nccwpck_require__(1017);
-/* harmony import */ var lcov_total__WEBPACK_IMPORTED_MODULE_5__ = __nccwpck_require__(4559);
-/* harmony import */ var axios__WEBPACK_IMPORTED_MODULE_6__ = __nccwpck_require__(3115);
+/* harmony import */ var axios__WEBPACK_IMPORTED_MODULE_5__ = __nccwpck_require__(3115);
+/* harmony import */ var _factories_runner_factory_js__WEBPACK_IMPORTED_MODULE_6__ = __nccwpck_require__(3876);
 
 
 
@@ -6275,48 +6447,17 @@ __nccwpck_require__.a(__webpack_module__, async (__webpack_handle_async_dependen
 
 
 
-const processCwd = process.env.GITHUB_WORKSPACE ?? process.cwd();
-
-const checkForLcovInfo = async (cwd) => {
-  try {
-    await fs_promises__WEBPACK_IMPORTED_MODULE_3__.stat(path__WEBPACK_IMPORTED_MODULE_4__.resolve(cwd, "coverage", "lcov.info"));
-    return true;
-  } catch(e) {
-    return false;
-  }
-}
 
 const rootExclusive = async (root) => {
   const workspacePackages = _actions_core__WEBPACK_IMPORTED_MODULE_0__.getInput(
     'PACKAGES', { required: true, trimWhitespace: true }
   )?.split(/(?<!(?:$|[^\\])(?:\\\\)*?\\),/).map(item => item.replace("\\,", ","));
 
-  const coverages = [];
-
-  for (const workspacePackage of workspacePackages) {
-    await fs_promises__WEBPACK_IMPORTED_MODULE_3__.stat(processCwd, root, workspacePackage);
-    const packageCwd = path__WEBPACK_IMPORTED_MODULE_4__.resolve(processCwd, root, workspacePackage);
-
-    if (!await checkForLcovInfo(packageCwd)) {
-      try {
-        await fs_promises__WEBPACK_IMPORTED_MODULE_3__.stat(path__WEBPACK_IMPORTED_MODULE_4__.resolve(processCwd, root, workspacePackage, ".nyc_output"));
-        await _actions_exec__WEBPACK_IMPORTED_MODULE_1__.exec('npx nyc report', ["--reporter=lcovonly"], {cwd: path__WEBPACK_IMPORTED_MODULE_4__.resolve(processCwd, root, workspacePackage)});
-      } catch(e) {}
-
-      if (!await checkForLcovInfo(packageCwd)) {
-        throw new Error("lcov.info not found");
-      }
-    }
-
-    const totalCoverage = lcov_total__WEBPACK_IMPORTED_MODULE_5__(path__WEBPACK_IMPORTED_MODULE_4__.resolve(packageCwd, "coverage", "lcov.info"), {type: "lcov"});
-    coverages.push({ workspacePackage, coverageSummary: { totalCoverage } });
-  }
-
-  return coverages;
+  return await _factories_runner_factory_js__WEBPACK_IMPORTED_MODULE_6__/* ["default"].getRootRunner */ .Z.getRootRunner(root, workspacePackages).getPackagesCoverage();
 }
 
 async function downloadImage(url, filepath) {
-  const response = await axios__WEBPACK_IMPORTED_MODULE_6__({
+  const response = await axios__WEBPACK_IMPORTED_MODULE_5__({
       url,
       method: 'GET',
       responseType: 'stream'
@@ -6341,9 +6482,6 @@ const runAction = async () => {
       const oldPath = path__WEBPACK_IMPORTED_MODULE_4__.resolve(originalBranch, "old", latestCommitId);
       const latestPath = path__WEBPACK_IMPORTED_MODULE_4__.resolve(originalBranch, "latest");
 
-      const getJson = (filePath, packageName) => path__WEBPACK_IMPORTED_MODULE_4__.resolve(filePath, packageName + ".total.json");
-      const getBadge = (filePath, packageName) => path__WEBPACK_IMPORTED_MODULE_4__.resolve(filePath, packageName + ".badge.svg");
-
       try {
         await _actions_exec__WEBPACK_IMPORTED_MODULE_1__.exec("git stash");
       } catch(e) {}
@@ -6362,21 +6500,21 @@ const runAction = async () => {
       await _actions_io__WEBPACK_IMPORTED_MODULE_2__.rmRF(__nccwpck_require__.ab + "monorepo-coverage/" + latestPath + '/*').catch(() => {});
       await _actions_io__WEBPACK_IMPORTED_MODULE_2__.mkdirP(latestPath).catch(() => {});
 
-      for (const {workspacePackage, coverageSummary}  of coverages) {
-        await fs_promises__WEBPACK_IMPORTED_MODULE_3__.writeFile(getJson(oldPath, workspacePackage), JSON.stringify(coverageSummary, null, 2));
-        await fs_promises__WEBPACK_IMPORTED_MODULE_3__.writeFile(getJson(latestPath, workspacePackage), JSON.stringify(coverageSummary, null, 2));
+      for (const packageCoverage  of coverages) {
+        await fs_promises__WEBPACK_IMPORTED_MODULE_3__.writeFile(packageCoverage.json(oldPath), JSON.stringify(packageCoverage.coverage, null, 2));
+        await fs_promises__WEBPACK_IMPORTED_MODULE_3__.writeFile(packageCoverage.json(latestPath), JSON.stringify(packageCoverage.coverage, null, 2));
 
         await downloadImage(
-          `https://img.shields.io/badge/${workspacePackage.replaceAll("-", "--")}-${coverageSummary.totalCoverage}%25-brightgreen`,
-          getBadge(latestPath, workspacePackage)
+          `https://img.shields.io/badge/${packageCoverage.name.replaceAll("-", "--")}-${packageCoverage.coverage.totalCoverage}%25-brightgreen`,
+          packageCoverage.badge(latestPath)
         );
 
-        await _actions_exec__WEBPACK_IMPORTED_MODULE_1__.exec("cp", [getBadge(latestPath, workspacePackage), getBadge(oldPath, workspacePackage)]);
+        await _actions_exec__WEBPACK_IMPORTED_MODULE_1__.exec("cp", [packageCoverage.badge(latestPath), packageCoverage.badge(oldPath)]);
 
-        await _actions_exec__WEBPACK_IMPORTED_MODULE_1__.exec("git add", [getJson(oldPath, workspacePackage)]);
-        await _actions_exec__WEBPACK_IMPORTED_MODULE_1__.exec("git add", [getBadge(oldPath, workspacePackage)]);
-        await _actions_exec__WEBPACK_IMPORTED_MODULE_1__.exec("git add", [getJson(latestPath, workspacePackage)]);
-        await _actions_exec__WEBPACK_IMPORTED_MODULE_1__.exec("git add", [getBadge(latestPath, workspacePackage)]);
+        await _actions_exec__WEBPACK_IMPORTED_MODULE_1__.exec("git add", [packageCoverage.json(oldPath)]);
+        await _actions_exec__WEBPACK_IMPORTED_MODULE_1__.exec("git add", [packageCoverage.badge(oldPath)]);
+        await _actions_exec__WEBPACK_IMPORTED_MODULE_1__.exec("git add", [packageCoverage.json(latestPath)]);
+        await _actions_exec__WEBPACK_IMPORTED_MODULE_1__.exec("git add", [packageCoverage.badge(latestPath)]);
       }
 
       await _actions_exec__WEBPACK_IMPORTED_MODULE_1__.exec("git config", ["http.sslVerify", false]);
@@ -6517,6 +6655,23 @@ __webpack_handle_async_dependencies__();
 /******/ 	};
 /******/ })();
 /******/ 
+/******/ /* webpack/runtime/define property getters */
+/******/ (() => {
+/******/ 	// define getter functions for harmony exports
+/******/ 	__nccwpck_require__.d = (exports, definition) => {
+/******/ 		for(var key in definition) {
+/******/ 			if(__nccwpck_require__.o(definition, key) && !__nccwpck_require__.o(exports, key)) {
+/******/ 				Object.defineProperty(exports, key, { enumerable: true, get: definition[key] });
+/******/ 			}
+/******/ 		}
+/******/ 	};
+/******/ })();
+/******/ 
+/******/ /* webpack/runtime/hasOwnProperty shorthand */
+/******/ (() => {
+/******/ 	__nccwpck_require__.o = (obj, prop) => (Object.prototype.hasOwnProperty.call(obj, prop))
+/******/ })();
+/******/ 
 /******/ /* webpack/runtime/compat */
 /******/ 
 /******/ if (typeof __nccwpck_require__ !== 'undefined') __nccwpck_require__.ab = new URL('.', import.meta.url).pathname.slice(import.meta.url.match(/^file:\/\/\/\w:/) ? 1 : 0, -1) + "/";
@@ -6526,6 +6681,6 @@ __webpack_handle_async_dependencies__();
 /******/ // startup
 /******/ // Load entry module and return exports
 /******/ // This entry module used 'module' so it can't be inlined
-/******/ var __webpack_exports__ = __nccwpck_require__(2126);
+/******/ var __webpack_exports__ = __nccwpck_require__(3071);
 /******/ __webpack_exports__ = await __webpack_exports__;
 /******/ 
