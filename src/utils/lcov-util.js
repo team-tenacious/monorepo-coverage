@@ -4,15 +4,23 @@ import path from "node:path";
 import lcovTotal from 'lcov-total';
 
 const processCwd = process.env.GITHUB_WORKSPACE ?? process.cwd();
+console.log(processCwd);
 
 class LcovUtil {
   #packageName;
   #root;
+  #actionWrapper;
 
-  constructor(packageName, root) {
+  constructor(packageName, root, actionWrapper) {
     this.#packageName = packageName;
     this.#root = root;
-    statSync(this.#path);
+    this.#actionWrapper = actionWrapper;
+
+    try {
+      statSync(this.#path);
+    } catch(e) {
+      throw new Error(`Package does not exist: ${this.#root}/${this.#packageName}`)
+    }
   }
 
   async exists() {
@@ -27,8 +35,10 @@ class LcovUtil {
   async generate() {
     try {
       await fs.stat(path.resolve(this.#path, ".nyc_output"));
-      await exec.exec('npx nyc report', ["--reporter=lcovonly"], {cwd: this.#path});
-    } catch(e) {};
+      await this.#actionWrapper.exec('npx nyc report', ["--reporter=lcovonly"], {cwd: this.#path});
+    } catch(e) {
+      console.debug("Error occurred while generating coverage - ignoring")
+    };
   }
 
   read() {

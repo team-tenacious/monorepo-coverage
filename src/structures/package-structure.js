@@ -1,3 +1,5 @@
+import path from "path";
+
 class PackageStructure {
   #packageName;
   #coverage;
