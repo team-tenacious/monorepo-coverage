@@ -7,7 +7,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "tpl:test": "mocha --recursive",
-    "tpl:cover": "c8 --all --reporter=lcov --reporter=text yarn",
+    "tpl:cover": "c8 --all -r html --reporter=lcov --reporter=text yarn",
     "test:unit": "yarn tpl:test test/unit",
     "test:unit:cover": "yarn tpl:cover test:unit"
   },
