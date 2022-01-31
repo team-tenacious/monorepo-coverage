@@ -22,18 +22,26 @@ class RootRunner {
     return packageCoverage;
   }
 
-  async #getTotalCoverage(wspackageName) {
-    const lcov = UtilFactory.getLcovUtil(wspackageName, this.#root);
+  async #hasLcov(lcovUtil) {
+    if (!await lcovUtil.exists()) {
+      await lcovUtil.generate();
 
-    if (!await lcov.exists()) {
-      await lcov.generate();
-
-      if (!await lcov.exists()) {
-        throw new Error("lcov.info not found");
+      if (!await lcovUtil.exists()) {
+        return false;
       }
     }
 
-    return lcov.read();
+    return true;
+  }
+
+  async #getTotalCoverage(wspackageName) {
+    const lcov = UtilFactory.getLcovUtil(wspackageName, this.#root);
+
+    if (await this.#hasLcov(lcov)) {
+      return lcov.read();
+    } else {
+      throw new Error("lcov.info not found");
+    }
   }
 }
 
